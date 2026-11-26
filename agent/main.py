@@ -1,5 +1,3 @@
-
-import argparse
 import json
 import ollama
 
@@ -58,17 +56,15 @@ TOOL_DEFINITIONS = [
 ]
 
 
-def run_agent(user, question):
-    tools.set_acting_user(user)
-
+def run_agent(question):
     messages = [
         {
             "role": "system",
             "content": (
-                f"You are a company AI assistant. "
-                f"The current user is {user}. "
-                "Answer the user's request using the available tools. "
-                "Do not invent data. If information is unavailable, say so."
+                "You are a company AI assistant operating as the "
+                "machine client ai-agent. Answer using the available "
+                "tools. Do not invent data. If information is unavailable, "
+                "say so."
             )
         },
         {
@@ -77,8 +73,7 @@ def run_agent(user, question):
         }
     ]
 
-    print(f"\n[USER] {user}")
-    print(f"[REQUEST] {question}")
+    print(f"\n[REQUEST] {question}")
 
     response = ollama.chat(
         model="qwen3:4b",
@@ -100,7 +95,7 @@ def run_agent(user, question):
 
         result = tools.execute_tool(name, arguments)
 
-        print("[API] Data retrieved:")
+        print("[API] Result:")
         print(json.dumps(result, indent=2))
 
         messages.append({
@@ -119,11 +114,8 @@ def run_agent(user, question):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--user", required=True)
-    args = parser.parse_args()
-
-    print("AI Agent — Insecure Baseline")
+    print("AI Agent — Stage 2 OAuth2")
+    print("Authenticated as machine client: ai-agent")
     print("Type 'exit' to quit.")
 
     while True:
@@ -133,4 +125,4 @@ if __name__ == "__main__":
             break
 
         if question:
-            run_agent(args.user, question)
+            run_agent(question)

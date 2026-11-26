@@ -1,27 +1,21 @@
-
 from fastapi import FastAPI, Depends, HTTPException
 from data.seed import FINANCIAL_REPORTS, CUSTOMERS
-from apis.policy import (
-    get_acting_user,
-    can_read_report,
-    can_read_customers
-)
+from apis.auth import require_role
 
-app = FastAPI(title="Finance API - Stage 1")
+app = FastAPI(title="Finance API - Stage 2 OAuth2")
 
 
 @app.get("/reports")
-def get_financial_reports(user: str = Depends(get_acting_user)):
-    return [
-        report for report in FINANCIAL_REPORTS
-        if can_read_report(user, report)
-    ]
+def get_financial_reports(
+    claims: dict = Depends(require_role("finance"))
+):
+    return FINANCIAL_REPORTS
 
 
 @app.get("/reports/{department}")
 def get_department_report(
     department: str,
-    user: str = Depends(get_acting_user)
+    claims: dict = Depends(require_role("finance"))
 ):
     report = next(
         (r for r in FINANCIAL_REPORTS
@@ -32,15 +26,11 @@ def get_department_report(
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
 
-    if not can_read_report(user, report):
-        raise HTTPException(status_code=403, detail="Access denied")
-
     return report
 
 
 @app.get("/customers")
-def get_customers(user: str = Depends(get_acting_user)):
-    if not can_read_customers(user):
-        raise HTTPException(status_code=403, detail="Access denied")
-
+def get_customers(
+    claims: dict = Depends(require_role("customers"))
+):
     return CUSTOMERS
